@@ -572,7 +572,7 @@ $('#copy').addEventListener('click',function(){
   try{navigator.clipboard.writeText(txt).then(function(){$('#copy').textContent='Copied ✓';setTimeout(renderHits,1400);},fallback);}catch(err){fallback();}
 });
 /* Anonymous visit counting and one tap reaction. Both stay off while COLLECT_URL is empty. */
-var COLLECT_URL='';
+var COLLECT_URL='https://script.google.com/macros/s/AKfycbw76GrYBn9SevxMdVoCFH--GQ-hAmCs7bW5OXO2VZ25E-RyuTyJJya3sKmBC8k-APk/exec';
 var vid='';
 try{vid=localStorage.getItem('am_vid')||'';}catch(e1){}
 if(!vid){
