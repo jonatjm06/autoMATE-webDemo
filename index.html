@@ -21,7 +21,7 @@ h1,h2{text-wrap:balance}
 .steps span.s.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
 .steps span.s.done{color:var(--ok);border-color:var(--ok)}
 .steps i{font-style:normal;color:var(--line)}
-section[hidden]{display:none!important}
+[hidden]{display:none!important}
 .hero{display:flex;flex-direction:column;gap:12px;position:relative}
 .hero h1{font-size:clamp(30px,7vw,48px);line-height:1.1;font-weight:600}
 .hero p.lead{color:var(--muted);max-width:56ch;font-size:17px}
@@ -572,7 +572,7 @@ $('#copy').addEventListener('click',function(){
   try{navigator.clipboard.writeText(txt).then(function(){$('#copy').textContent='Copied ✓';setTimeout(renderHits,1400);},fallback);}catch(err){fallback();}
 });
 /* Anonymous visit counting and one tap reaction. Both stay off while COLLECT_URL is empty. */
-var COLLECT_URL='https://script.google.com/macros/s/AKfycbw76GrYBn9SevxMdVoCFH--GQ-hAmCs7bW5OXO2VZ25E-RyuTyJJya3sKmBC8k-APk/exec';
+var COLLECT_URL='';
 var vid='';
 try{vid=localStorage.getItem('am_vid')||'';}catch(e1){}
 if(!vid){
