@@ -1,0 +1,623 @@
+<title>autoMATE Demo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one phone-first column with three screens (set up, generate, summary); dark midnight navy first, light variant follows the viewer */
+:root{--bg:#0F1620;--surface:#172130;--sunken:#0B111A;--border:#2A3647;--fg:#E3EAF3;--muted:#98A7BA;--accent:#FFCB9A;--on-accent:#0F1620;--brand:#2A9D9F;--ok:#6EE7B7;--ok-bg:#0F2A24;--warn:#F0C75E;--warn-bg:#2E2810;--err:#FF8A8A;--err-bg:#35191D;--hm0:#FFCB9A;--hm1:#27455A;--hm2:#2A9D9F;--line:#54657D;--font:'IBM Plex Sans',system-ui,'Segoe UI',sans-serif;--mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;color-scheme:dark}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#EAF3F0;--surface:#FFFFFF;--sunken:#F4F9F7;--border:#BCD5CE;--fg:#1F2A27;--muted:#53645F;--accent:#116466;--on-accent:#FFFFFF;--brand:#116466;--ok:#17704F;--ok-bg:#DDF2E9;--warn:#8A5A00;--warn-bg:#FBEBC8;--err:#B3261E;--err-bg:#FBE1DE;--hm0:#E07B39;--hm1:#D3E4DF;--hm2:#116466;--line:#6F8A83;color-scheme:light}}
+:root[data-theme="light"]{--bg:#EAF3F0;--surface:#FFFFFF;--sunken:#F4F9F7;--border:#BCD5CE;--fg:#1F2A27;--muted:#53645F;--accent:#116466;--on-accent:#FFFFFF;--brand:#116466;--ok:#17704F;--ok-bg:#DDF2E9;--warn:#8A5A00;--warn-bg:#FBEBC8;--err:#B3261E;--err-bg:#FBE1DE;--hm0:#E07B39;--hm1:#D3E4DF;--hm2:#116466;--line:#6F8A83;color-scheme:light}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:16px;line-height:1.5;padding-block:0 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+h1,h2{text-wrap:balance}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:16px}
+.brand{font-weight:600;font-size:19px;color:var(--accent);letter-spacing:.2px}
+.pill{font-size:12px;padding:3px 10px;border-radius:12px;border:1px solid var(--line);color:var(--muted)}
+.steps{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:13px;color:var(--muted)}
+.steps span.s{padding:4px 10px;border-radius:14px;border:1px solid var(--border)}
+.steps span.s.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
+.steps span.s.done{color:var(--ok);border-color:var(--ok)}
+.steps i{font-style:normal;color:var(--line)}
+section[hidden]{display:none!important}
+.hero{display:flex;flex-direction:column;gap:12px;position:relative}
+.hero h1{font-size:clamp(30px,7vw,48px);line-height:1.1;font-weight:600}
+.hero p.lead{color:var(--muted);max-width:56ch;font-size:17px}
+#dots{width:100%;height:auto;aspect-ratio:24/6;display:block;border-radius:12px;background:var(--sunken);border:1px solid var(--border)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.card h2{font-size:19px;font-weight:600}
+.field{display:flex;flex-direction:column;gap:8px}
+.field>label,.field>.lab{font-size:14px;color:var(--muted)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{min-height:44px;padding:0 16px;border-radius:22px;border:1px solid var(--line);background:transparent;display:inline-flex;align-items:center;gap:8px;font-size:15px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
+.sw{display:flex;align-items:center;gap:14px;min-height:44px;text-align:left;background:transparent;border:1px solid var(--line);border-radius:12px;padding:10px 14px;width:100%}
+.sw .track{flex:none;width:44px;height:26px;border-radius:13px;background:var(--sunken);border:1px solid var(--line);position:relative}
+.sw .track::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:9px;background:var(--muted);transition:transform .15s}
+.sw[aria-pressed="true"] .track{background:var(--warn-bg);border-color:var(--warn)}
+.sw[aria-pressed="true"] .track::after{transform:translateX(18px);background:var(--warn)}
+.sw b{display:block;font-weight:600}
+.sw small{color:var(--muted);font-size:13px}
+.note{font-size:13px;color:var(--muted)}
+.mono{font-family:var(--mono)}
+.btn{min-height:48px;padding:0 22px;border-radius:10px;border:0;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:16px}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line);font-weight:400}
+.btn.small{min-height:40px;padding:0 14px;font-size:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grow{flex:1 1 auto}
+/* run screen */
+.bar{height:10px;border-radius:5px;background:var(--sunken);border:1px solid var(--border);overflow:hidden}
+.bar>div{height:100%;background:var(--accent);width:0;transition:width .3s}
+.stepl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.stepl li{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:15px}
+.stepl li .d{width:20px;height:20px;border-radius:10px;border:1.5px solid var(--line);flex:none;display:grid;place-items:center;font-size:12px}
+.stepl li.on{color:var(--fg)}
+.stepl li.on .d{border-color:var(--accent)}
+.stepl li.ok{color:var(--fg)}
+.stepl li.ok .d{background:var(--ok);border-color:var(--ok);color:var(--bg)}
+.con{font-family:var(--mono);font-size:12.5px;line-height:1.6;background:var(--sunken);border:1px solid var(--border);border-radius:10px;padding:12px 14px;height:190px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;color:var(--muted)}
+.con div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.con .g{color:var(--ok)}
+/* summary */
+.verdict{border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px;border:1px solid}
+.verdict.ok{background:var(--ok-bg);border-color:var(--ok)}
+.verdict.warn{background:var(--warn-bg);border-color:var(--warn)}
+.verdict.bad{background:var(--err-bg);border-color:var(--err)}
+.verdict .eyebrow{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase}
+.verdict.ok .eyebrow{color:var(--ok)}.verdict.warn .eyebrow{color:var(--warn)}.verdict.bad .eyebrow{color:var(--err)}
+.verdict h2{font-size:clamp(22px,5vw,30px);line-height:1.2;font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column}
+.kpi span{font-size:13px;color:var(--muted)}
+.kpi b{font-family:var(--mono);font-size:24px;font-weight:500}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px}
+.ck{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+.ck b{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--fg)}
+.ck .st{width:10px;height:10px;border-radius:5px;flex:none}
+.ck.ok .st{background:var(--ok)}.ck.warn .st{background:var(--warn)}.ck.bad .st{background:var(--err)}
+.ck.ok b{color:var(--ok)}.ck.warn b{color:var(--warn)}.ck.bad b{color:var(--err)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start}
+.pbars{display:flex;align-items:flex-end;gap:6px;height:150px;border-bottom:1px solid var(--line);padding-top:16px}
+.pbars button{flex:1 1 0;min-width:0;height:100%;border:0;background:transparent;padding:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px}
+.pbars .bb{width:100%;border-radius:4px 4px 0 0;background:var(--brand);opacity:.55}
+.pbars button[aria-pressed="true"] .bb{opacity:1;background:var(--accent)}
+.pbars .fl{width:7px;height:7px;border-radius:4px;background:var(--warn);flex:none}
+.pbars .nofl{width:7px;height:7px;flex:none}
+.plab{display:flex;gap:6px;font-size:11px;color:var(--muted);font-family:var(--mono)}
+.plab span{flex:1 1 0;text-align:center}
+.hm{position:relative;width:100%}
+.hm canvas{display:block;width:100%;border-radius:8px;background:var(--sunken);touch-action:manipulation}
+.tip{position:absolute;pointer-events:none;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12.5px;white-space:nowrap;z-index:2;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.leg{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
+.leg i{flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,var(--hm0),var(--hm1),var(--hm2))}
+input[type=range]{width:100%;accent-color:var(--accent);height:32px}
+.big{font-family:var(--mono);font-size:32px;font-weight:500;color:var(--accent);line-height:1.1}
+.big small{display:block;font-family:var(--font);font-size:13px;color:var(--muted);font-weight:400}
+.hrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border-bottom:1px solid var(--border)}
+.hrow .main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) 54px;gap:10px;align-items:center;padding:10px 4px;background:transparent;border:0;text-align:left}
+.hrow .main[aria-pressed="true"]{background:var(--sunken)}
+.hrow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .nm small{display:block;color:var(--muted);font-size:12px;font-family:var(--mono)}
+.gauge{height:6px;border-radius:3px;background:var(--sunken);overflow:hidden}
+.gauge i{display:block;height:100%;background:var(--accent)}
+.hrow .v{font-family:var(--mono);font-size:14px;text-align:right}
+.star{width:44px;height:44px;border:0;background:transparent;color:var(--muted);font-size:22px;line-height:1}
+.star[aria-pressed="true"]{color:var(--accent)}
+.detail{background:var(--sunken);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.detail h3{font-size:18px}
+.detail .tag{display:inline-block;font-size:12px;padding:2px 9px;border-radius:11px;border:1px solid var(--line);color:var(--muted);margin-right:6px}
+textarea{width:100%;min-height:90px;background:var(--sunken);color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:var(--mono);font-size:13px}
+footer{color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:6px;padding-top:8px}
+.ov{position:fixed;inset:0;background:rgba(5,9,14,.72);display:grid;place-items:center;padding:16px;z-index:50}
+.dlg{position:relative;overflow:hidden;width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:30px 24px 24px}
+.dlgin{position:relative;display:flex;flex-direction:column;gap:14px}
+.dlgin h2{font-size:28px;line-height:1.15;color:var(--accent)}
+.dlgin p{color:var(--fg)}
+.dlgin .btn{width:100%}
+.dlg .x{position:absolute;top:6px;right:6px;width:44px;height:44px;border:0;background:transparent;color:var(--muted);font-size:26px;line-height:1;z-index:2}
+.cf{position:absolute;inset:0;pointer-events:none}
+.cf i{position:absolute;top:-12px;width:8px;height:8px;border-radius:50%;animation:fall 2.4s ease-in forwards}
+@keyframes fall{to{transform:translateY(460px) rotate(240deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){.cf{display:none}}
+.survey .chips .chip{min-height:40px}
+.contact{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:4px;color:var(--fg);font-size:15px}
+.contact .eyebrow{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent)}
+.contact b{font-size:18px;font-weight:600}
+.contact span{color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.bar>div,.sw .track::after{transition:none}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <span class="brand">autoMATE</span>
+    <span class="pill">Demo · simulated data</span>
+    <div class="steps" aria-label="Progress"><span class="s on" id="st1">1 Set up</span><i>→</i><span class="s" id="st2">2 Generate</span><i>→</i><span class="s" id="st3">3 Summary</span></div>
+  </div>
+
+  <section id="s-setup" class="wrap" style="gap:20px">
+    <div class="hero">
+      <canvas id="dots" width="960" height="240" role="img" aria-label="A grid of dots like a 384-well plate with a few lit wells"></canvas>
+      <h1>Screen a plate. See the report.</h1>
+      <p class="lead">autoMATE turns raw plate-reader data into a quality-checked report. Choose a few options, press Generate, then explore the summary it builds.</p>
+    </div>
+    <div class="card">
+      <h2>Set up a simulated screen</h2>
+      <div class="field">
+        <span class="lab" id="l-src">Data source</span>
+        <div class="chips" role="group" aria-labelledby="l-src" data-group="source">
+          <button type="button" class="chip" data-v="cv8000" aria-pressed="true">CV8000</button>
+          <button type="button" class="chip" data-v="reader" aria-pressed="false">Plate reader</button>
+          <button type="button" class="chip" data-v="custom" aria-pressed="false">Custom</button>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lab" id="l-pl">Plates in the screen</span>
+        <div class="chips" role="group" aria-labelledby="l-pl" data-group="plates">
+          <button type="button" class="chip" data-v="4" aria-pressed="true">4 plates</button>
+          <button type="button" class="chip" data-v="8" aria-pressed="false">8 plates</button>
+          <button type="button" class="chip" data-v="12" aria-pressed="false">12 plates</button>
+        </div>
+        <span class="note">Each plate has 384 wells: 320 compounds, 32 DMSO and 32 staurosporine controls.</span>
+      </div>
+      <button type="button" class="sw" id="messy" aria-pressed="false">
+        <span class="track" aria-hidden="true"></span>
+        <span><b>Make the run messy</b><small>Adds plate drift, an edge effect and one noisy plate, so you can watch QC catch it.</small></span>
+      </button>
+      <div class="row"><button type="button" class="btn" id="go">Generate report</button><span class="note">Takes a few seconds.</span></div>
+    </div>
+  </section>
+
+  <section id="s-run" class="wrap" hidden>
+    <div class="card">
+      <h2 id="run-title">Generating your report</h2>
+      <div class="bar" role="progressbar" aria-label="Report progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pbar"><div id="pfill"></div></div>
+      <ul class="stepl" id="stepl"></ul>
+      <div class="con" id="con" aria-hidden="true"></div>
+      <span class="note">autoMATE runs your R Markdown pipeline in the background and streams its progress here.</span>
+    </div>
+  </section>
+
+  <section id="s-res" class="wrap" hidden>
+    <div class="verdict" id="verdict"></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="checks" id="checks"></div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Plate quality</h2>
+        <span class="note" id="pnote">Median DMSO cell count per plate. Tap a plate to look at it.</span>
+        <div class="pbars" id="pbars"></div>
+        <div class="plab" id="plab"></div>
+        <span class="note"><span style="color:var(--warn)">●</span> Z′ below 0.5 on that plate.</span>
+      </div>
+      <div class="card">
+        <div class="row"><h2 class="grow" id="hmtitle">Plate 1</h2>
+          <div class="chips" role="group" aria-label="Heat map value" data-group="metric">
+            <button type="button" class="chip" data-v="norm" aria-pressed="true" style="min-height:36px;padding:0 12px;font-size:13px">% of DMSO</button>
+            <button type="button" class="chip" data-v="raw" aria-pressed="false" style="min-height:36px;padding:0 12px;font-size:13px">Cells</button>
+          </div>
+        </div>
+        <div class="hm" id="hm"><canvas id="heat" aria-label="384-well plate heat map. Tap a well to see its value."></canvas><div class="tip" id="tip" hidden></div></div>
+        <div class="leg"><span id="lg0">0 %</span><i></i><span id="lg1">150 %</span></div>
+        <span class="note">Outlined wells are controls: DMSO on the outer columns, staurosporine next to them.</span>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>Hits</h2>
+        <div class="field">
+          <label for="thr">A hit has fewer cells than <b class="mono" id="thrl" style="color:var(--accent)">50 %</b> of DMSO</label>
+          <input id="thr" type="range" min="20" max="80" step="5" value="50">
+        </div>
+        <div class="row" style="gap:28px">
+          <div class="big" id="hn">0<small>compounds hit</small></div>
+          <div class="big" id="hp">0 %<small>of the library</small></div>
+          <div class="big" id="hq">0<small>on low-quality plates</small></div>
+        </div>
+        <span class="note">Hits on plates with Z′ below 0.5 deserve a second look before you trust them.</span>
+      </div>
+      <div class="card">
+        <div class="row"><h2 class="grow">Top hits</h2><button type="button" class="btn small ghost" id="copy">Copy shortlist (0)</button></div>
+        <div id="hits"></div>
+        <textarea id="ta" hidden readonly aria-label="Shortlist text"></textarea>
+        <div class="detail" id="detail"><span class="note">Tap a compound to see where it sat on the plate. Tap ☆ to shortlist it.</span></div>
+      </div>
+    </div>
+
+    <div class="row"><button type="button" class="btn" id="again">New random run</button><button type="button" class="btn ghost" id="flip">Switch to a messy run</button><button type="button" class="btn ghost" id="back">Change set-up</button></div>
+  </section>
+
+  <footer>
+    <div class="contact">
+      <span class="eyebrow">Built by</span>
+      <b>Jonat John Mathew</b>
+      <span>Software Developer, Transcriptomic and Bioinformatic Lab</span>
+      <span>Murdoch Children's Research Institute, Melbourne</span>
+    </div>
+    <span id="privacy" hidden>This page counts visits and one optional tap anonymously, using a random id stored in your browser. No names, emails or cookies.</span>
+    <span>This demo runs in your browser on simulated data. Real autoMATE is a desktop app that drives an R Markdown pipeline on your own screening data.</span>
+  </footer>
+</div>
+
+<div class="ov" id="ov" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="dlg-h">
+    <div class="cf" id="cf" aria-hidden="true"></div>
+    <button type="button" class="x" id="dlg-x" aria-label="Close">×</button>
+    <div id="dlg-body" class="dlgin">
+      <h2 id="dlg-h">Congratulations!</h2>
+      <p>You just ran your first drug screening report with autoMATE. Raw plate data in, quality-checked summary out.</p>
+      <button type="button" class="btn" id="r-new">Yay, let's explore!</button>
+      <button type="button" class="btn ghost" id="r-pro">I'm a pro, I've seen worse</button>
+    </div>
+    <div id="dlg-done" class="dlgin" hidden>
+      <h2>Thanks!</h2>
+      <p id="dlg-msg"></p>
+      <button type="button" class="btn" id="dlg-close">Back to the report</button>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+'use strict';
+//SIM-START
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(r){var u=0,v=0;while(!u)u=r();while(!v)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+var HIT_NAMES=['Trichostatin A','Paclitaxel','MG-132','Doxorubicin','Quisinostat','Panobinostat','Romidepsin','Bortezomib','Vincristine','Camptothecin'];
+var INERT_NAMES=['Aspirin','Caffeine','Metformin','Ibuprofen','Paracetamol','Loratadine','Penicillin G','Vitamin C','Folic acid','Ranitidine','Cetirizine','Atenolol'];
+function wellName(row,col){return String.fromCharCode(65+row)+('0'+(col+1)).slice(-2);}
+function simulate(o){
+  var r=mulberry32(o.seed),P=o.plates,base=220,cid=0,comps=[],wells=[];
+  var pool=[],named={},i;
+  for(i=0;i<HIT_NAMES.length;i++)pool.push({n:HIT_NAMES[i],e:0.02+r()*0.12});
+  for(i=0;i<INERT_NAMES.length;i++)pool.push({n:INERT_NAMES[i],e:1+gauss(r)*0.04});
+  var slots=P*320;
+  pool.forEach(function(p){var s;do{s=Math.floor(r()*slots);}while(named[s]);named[s]=p;});
+  var bad=o.messy?Math.floor(P*0.6):-1;
+  for(var p=0;p<P;p++){
+    var drift=o.messy?1-0.35*(P>1?p/(P-1):0):1;
+    var cv=o.messy?0.2:0.08, pc=(p===bad)?1.8:1, pw=[], slot=0;
+    for(var w=0;w<384;w++){
+      var row=Math.floor(w/24),col=w%24;
+      var edge=(row===0||row===15||col===2||col===21);
+      var type='cmp'; if(col===0||col===23)type='neg'; else if(col===1||col===22)type='pos';
+      var f=base*drift*((o.messy&&edge)?0.88:1), raw, ci=-1;
+      if(type==='neg'){raw=f*(1+gauss(r)*cv*pc);}
+      else if(type==='pos'){raw=f*0.04*(1+gauss(r)*0.35);}
+      else{
+        var nm=named[p*320+slot], eff, name;
+        if(nm){eff=nm.e;name=nm.n;}
+        else{
+          eff=(r()<0.07)?0.03+r()*0.4:1+gauss(r)*0.06;
+          if(r()<0.02)eff=1.25+r()*0.2;
+          name='CMP-'+('000'+(cid+1)).slice(-4);
+        }
+        raw=f*eff*(1+gauss(r)*cv*pc*0.6);
+        raw=Math.max(0,Math.round(raw));
+        comps.push({id:cid,name:name,plate:p,well:wellName(row,col),row:row,col:col,edge:edge,raw:raw,norm:0});
+        ci=cid;cid++;slot++;
+      }
+      raw=Math.max(0,Math.round(raw));
+      pw.push({type:type,raw:raw,ci:ci,norm:0});
+    }
+    wells.push(pw);
+  }
+  return {plates:P,comps:comps,wells:wells,messy:!!o.messy};
+}
+function med(a){var s=a.slice().sort(function(x,y){return x-y;}),n=s.length;return n?(n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2):0;}
+function mean(a){var t=0;for(var i=0;i<a.length;i++)t+=a[i];return t/a.length;}
+function sd(a){var m=mean(a),t=0;for(var i=0;i<a.length;i++)t+=(a[i]-m)*(a[i]-m);return Math.sqrt(t/(a.length-1));}
+function analyse(d){
+  var plates=[];
+  for(var p=0;p<d.plates;p++){
+    var neg=[],pos=[];
+    d.wells[p].forEach(function(w){if(w.type==='neg')neg.push(w.raw);else if(w.type==='pos')pos.push(w.raw);});
+    var m=med(neg);
+    var z=1-3*(sd(pos)+sd(neg))/Math.abs(mean(neg)-mean(pos));
+    plates.push({med:m,cv:sd(neg)/mean(neg)*100,z:z});
+    d.wells[p].forEach(function(w){w.norm=w.raw/m;if(w.ci>=0)d.comps[w.ci].norm=w.norm;});
+  }
+  var edge=[],inner=[];
+  d.comps.forEach(function(c){(c.edge?edge:inner).push(c.norm);});
+  var drift=plates[plates.length-1].med/plates[0].med;
+  var minZ=Math.min.apply(null,plates.map(function(x){return x.z;}));
+  var lowQ=plates.filter(function(x){return x.z<0.5;}).length;
+  return {plates:plates,drift:drift,edgeRatio:med(edge)/med(inner),minZ:minZ,lowQ:lowQ};
+}
+function verdictOf(a){
+  var checks=[];
+  var zs=a.minZ>=0.5?'ok':(a.minZ>=0?'warn':'bad');
+  checks.push({t:'Controls',s:zs,x:'Lowest Z′ across plates is '+a.minZ.toFixed(2)+'. Above 0.5 is a good window between DMSO and staurosporine.'});
+  var ds=a.drift>=0.8?'ok':(a.drift>=0.6?'warn':'bad');
+  checks.push({t:'Plate drift',s:ds,x:'DMSO cells on the last plate are '+Math.round(a.drift*100)+' % of the first plate.'});
+  var es=a.edgeRatio>=0.92?'ok':(a.edgeRatio>=0.85?'warn':'bad');
+  checks.push({t:'Edge effect',s:es,x:'Outer wells read '+Math.round(a.edgeRatio*100)+' % of inner wells.'});
+  var bads=checks.filter(function(c){return c.s==='bad';}).length,warns=checks.filter(function(c){return c.s==='warn';}).length;
+  var level=bads>0?'bad':(warns>0?'warn':'ok');
+  return {checks:checks,level:level};
+}
+function hitsAt(d,thr){return d.comps.filter(function(c){return c.norm<thr;}).sort(function(x,y){return x.norm-y.norm;});}
+//SIM-END
+
+var $=function(s,el){return (el||document).querySelector(s);};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var S={source:'cv8000',plates:4,messy:false,seed:11,data:null,an:null,plate:0,thr:0.5,metric:'norm',sel:null,short:{},timer:null,run:0};
+
+function show(name){
+  ['setup','run','res'].forEach(function(n){$('#s-'+n).hidden=(n!==name);});
+  var idx={setup:1,run:2,res:3}[name];
+  [1,2,3].forEach(function(i){var e=$('#st'+i);e.className='s'+(i===idx?' on':(i<idx?' done':''));});
+  window.scrollTo(0,0);
+}
+
+/* chips */
+document.addEventListener('click',function(e){
+  var b=e.target.closest('.chip[data-v]'); if(!b)return;
+  var g=b.parentNode.getAttribute('data-group'); if(!g)return;
+  Array.prototype.forEach.call(b.parentNode.querySelectorAll('.chip'),function(c){c.setAttribute('aria-pressed',c===b?'true':'false');});
+  var v=b.getAttribute('data-v');
+  if(g==='source')S.source=v;
+  if(g==='plates')S.plates=parseInt(v,10);
+  if(g==='metric'){S.metric=v;drawHeat();}
+});
+$('#messy').addEventListener('click',function(){S.messy=!S.messy;this.setAttribute('aria-pressed',S.messy?'true':'false');});
+
+/* hero dots */
+var dotsOn=true,dotState=[];
+(function(){
+  var cv=$('#dots'),cx=cv.getContext('2d'),W=960,H=240,cols=48,rows=12,cs=W/cols;
+  for(var i=0;i<cols*rows;i++)dotState.push(Math.random()<0.07?1:0);
+  function draw(){
+    var st=getComputedStyle(document.documentElement);
+    var a=st.getPropertyValue('--accent').trim(),m=st.getPropertyValue('--line').trim();
+    cx.clearRect(0,0,W,H);
+    for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){
+      var on=dotState[r*cols+c];
+      cx.beginPath();cx.arc(c*cs+cs/2,r*cs+cs/2,on?cs*0.34:cs*0.2,0,6.2832);
+      cx.fillStyle=on?a:m;cx.globalAlpha=on?1:0.55;cx.fill();
+    }
+    cx.globalAlpha=1;
+  }
+  draw();
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduce)setInterval(function(){
+    if(!dotsOn||document.hidden)return;
+    for(var k=0;k<6;k++){var i=Math.floor(Math.random()*dotState.length);dotState[i]=Math.random()<0.2?1:0;}
+    draw();
+  },220);
+  if(window.matchMedia)window.matchMedia('(prefers-color-scheme: light)').addEventListener&&window.matchMedia('(prefers-color-scheme: light)').addEventListener('change',draw);
+})();
+
+/* run */
+var STEPS=['Reading plate files','Matching barcodes and annotation','Normalising to DMSO on each plate','Checking replicates and controls','Calling hits','Rendering the report'];
+function logLines(){
+  var src={cv8000:'CellPathfinder output',reader:'plate reader export',custom:'custom import'}[S.source];
+  return [
+    ['Rscript --vanilla render.R render_args.json',0],
+    ['✓ Importing '+S.plates+' plates from the '+src+'.',1],
+    ['✓ All barcodes had a matching data file.',1],
+    ['processing file: DDF-QC.Rmd',0],
+    ['✓ Importing annotation file for Batch 1.',1],
+    ['✓ PlateType for import = 384.',1],
+    ['12/40 [normalisation]',0],
+    ['✓ The values were normalised to the median of the DMSO control wells.',1],
+    ['✓ Skipped and excluded wells were removed from the analysis.',1],
+    ['24/40 [qc-metrics]',0],
+    ['✓ Z prime factor calculated per plate.',1],
+    ['35/40 [hits]',0],
+    ['output created: report.html',0]
+  ];
+}
+function startRun(){
+  track({type:'generate'});
+  S.data=simulate({plates:S.plates,messy:S.messy,seed:S.seed});
+  S.an=analyse(S.data);S.plate=0;S.sel=null;S.short={};
+  show('run');
+  var ul=$('#stepl');ul.innerHTML=STEPS.map(function(t,i){return '<li id="sl'+i+'"><span class="d"></span>'+esc(t)+'</li>';}).join('');
+  var con=$('#con');con.innerHTML='';
+  var lines=logLines(),total=STEPS.length,tick=0,rid=++S.run;
+  $('#run-title').textContent='Generating your report';
+  clearInterval(S.timer);
+  S.timer=setInterval(function(){
+    if(rid!==S.run){clearInterval(S.timer);return;}
+    tick++;
+    var stepIdx=Math.min(total,Math.floor(tick/3));
+    for(var i=0;i<total;i++){var li=$('#sl'+i);li.className=i<stepIdx?'ok':(i===stepIdx?'on':'');li.firstChild.textContent=i<stepIdx?'✓':'';}
+    var ln=lines[Math.floor(tick*lines.length/(total*3))-1];
+    if(ln&&!(con.lastChild&&con.lastChild.getAttribute('data-n')===String(tick))){
+      var d=document.createElement('div');d.textContent=ln[0];if(ln[1])d.className='g';d.setAttribute('data-n',String(tick));con.appendChild(d);
+      while(con.childNodes.length>9)con.removeChild(con.firstChild);
+    }
+    var pct=Math.min(100,Math.round(tick/(total*3)*100));
+    $('#pfill').style.width=pct+'%';$('#pbar').setAttribute('aria-valuenow',String(pct));
+    if(tick>=total*3+1){clearInterval(S.timer);$('#run-title').textContent='Report ready';setTimeout(function(){if(rid===S.run)showResult();},350);}
+  },230);
+}
+$('#go').addEventListener('click',startRun);
+$('#again').addEventListener('click',function(){S.seed=Math.floor(Math.random()*1e6);startRun();});
+$('#flip').addEventListener('click',function(){S.messy=!S.messy;$('#messy').setAttribute('aria-pressed',S.messy?'true':'false');startRun();});
+$('#back').addEventListener('click',function(){S.run++;clearInterval(S.timer);show('setup');});
+
+/* result */
+function countUp(el,to,fmt){
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){el.textContent=fmt(to);return;}
+  var t0=performance.now();
+  (function f(t){var k=Math.min(1,(t-t0)/600);el.textContent=fmt(Math.round(to*k));if(k<1)requestAnimationFrame(f);})(t0);
+}
+function showResult(){
+  show('res');
+  var d=S.data,a=S.an,v=verdictOf(a);
+  var head={ok:['Good to go','Controls separate well and the plates look consistent. The hits below are ready to follow up.'],
+            warn:['Usable, with things to check','Some quality measures are borderline. Look at the flagged cards before trusting individual hits.'],
+            bad:['Re-run recommended','Controls, drift or edge effects are bad enough to distort the hits. Fix the plates, then analyse again.']}[v.level];
+  var ve=$('#verdict');ve.className='verdict '+v.level;
+  ve.innerHTML='<span class="eyebrow">Run verdict</span><h2>'+esc(head[0])+'</h2><p>'+esc(head[1])+'</p>';
+  $('#kpis').innerHTML='<div class="kpi"><span>Compounds</span><b id="k1">0</b></div><div class="kpi"><span>Plates</span><b id="k2">0</b></div><div class="kpi"><span>Wells read</span><b id="k3">0</b></div><div class="kpi"><span>Best Z′</span><b>'+Math.max.apply(null,a.plates.map(function(x){return x.z;})).toFixed(2)+'</b></div>';
+  countUp($('#k1'),d.comps.length,function(n){return n.toLocaleString('en-US');});
+  countUp($('#k2'),d.plates,String);
+  countUp($('#k3'),d.plates*384,function(n){return n.toLocaleString('en-US');});
+  $('#checks').innerHTML=v.checks.map(function(c){return '<div class="ck '+c.s+'"><b><span class="st"></span>'+esc(c.t)+'</b><span>'+esc(c.x)+'</span></div>';}).join('');
+  $('#flip').textContent=S.messy?'Switch to a clean run':'Switch to a messy run';
+  renderPlates();drawHeat();renderHits();
+  popupSoon();
+}
+function renderPlates(){
+  var a=S.an,max=Math.max.apply(null,a.plates.map(function(x){return x.med;}));
+  $('#pbars').innerHTML=a.plates.map(function(p,i){
+    return '<button type="button" data-p="'+i+'" aria-pressed="'+(i===S.plate)+'" aria-label="Plate '+(i+1)+', '+Math.round(p.med)+' DMSO cells, Z prime '+p.z.toFixed(2)+'">'+(p.z<0.5?'<span class="fl"></span>':'<span class="nofl"></span>')+'<span class="bb" style="height:'+Math.round(p.med/max*110)+'px"></span></button>';
+  }).join('');
+  $('#plab').innerHTML=a.plates.map(function(p,i){return '<span>'+(i+1)+'</span>';}).join('');
+  $('#hmtitle').textContent='Plate '+(S.plate+1)+' · Z′ '+a.plates[S.plate].z.toFixed(2);
+}
+$('#pbars').addEventListener('click',function(e){
+  var b=e.target.closest('button[data-p]');if(!b)return;
+  S.plate=parseInt(b.getAttribute('data-p'),10);renderPlates();drawHeat();
+});
+
+/* heat map */
+function rgb(h){h=h.trim();if(h[0]==='#'){if(h.length===4)h='#'+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}return [128,128,128];}
+function mix(a,b,t){return 'rgb('+Math.round(a[0]+(b[0]-a[0])*t)+','+Math.round(a[1]+(b[1]-a[1])*t)+','+Math.round(a[2]+(b[2]-a[2])*t)+')';}
+var GEO={L:24,T:16,cs:10};
+function drawHeat(){
+  if(!S.data)return;
+  var cv=$('#heat'),box=$('#hm'),dpr=window.devicePixelRatio||1,W=box.clientWidth;if(!W)return;
+  var cs=(W-GEO.L)/24,H=Math.round(16*cs+GEO.T);GEO.cs=cs;
+  cv.style.height=H+'px';cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+  var cx=cv.getContext('2d');cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,W,H);
+  var st=getComputedStyle(document.documentElement);
+  var c0=rgb(st.getPropertyValue('--hm0')),c1=rgb(st.getPropertyValue('--hm1')),c2=rgb(st.getPropertyValue('--hm2'));
+  var muted=st.getPropertyValue('--muted').trim(),acc=st.getPropertyValue('--accent').trim(),fg=st.getPropertyValue('--fg').trim();
+  var ws=S.data.wells[S.plate],maxRaw=0;ws.forEach(function(w){if(w.raw>maxRaw)maxRaw=w.raw;});
+  var isNorm=S.metric==='norm';
+  $('#lg0').textContent=isNorm?'0 %':'0';$('#lg1').textContent=isNorm?'150 %':String(Math.round(maxRaw));
+  cx.font='10px '+getComputedStyle(document.body).fontFamily;cx.fillStyle=muted;cx.textAlign='center';
+  [1,5,9,13,17,21,24].forEach(function(c){cx.fillText(String(c),GEO.L+(c-0.5)*cs,10);});
+  cx.textAlign='right';
+  for(var r=0;r<16;r++)cx.fillText(String.fromCharCode(65+r),GEO.L-5,GEO.T+(r+0.5)*cs+3);
+  for(var i=0;i<384;i++){
+    var row=Math.floor(i/24),col=i%24,w=ws[i],t;
+    if(isNorm){var v=Math.min(1.5,w.norm);t=v<=1?mix(c0,c1,v):mix(c1,c2,(v-1)/0.5);}
+    else{t=mix(c1,c2,maxRaw?w.raw/maxRaw:0);}
+    cx.fillStyle=t;
+    var x=GEO.L+col*cs+1,y=GEO.T+row*cs+1;
+    cx.beginPath();cx.arc(x+(cs-2)/2,y+(cs-2)/2,Math.max(1,(cs-2)/2),0,6.2832);cx.fill();
+    if(w.type!=='cmp'){cx.strokeStyle=muted;cx.lineWidth=1;cx.stroke();}
+    if(S.sel!==null&&w.ci===S.sel){cx.strokeStyle=fg;cx.lineWidth=2;cx.beginPath();cx.arc(x+(cs-2)/2,y+(cs-2)/2,(cs-2)/2+1.5,0,6.2832);cx.stroke();}
+  }
+}
+function wellAt(e){
+  var cv=$('#heat'),rc=cv.getBoundingClientRect(),x=e.clientX-rc.left-GEO.L,y=e.clientY-rc.top-GEO.T;
+  var c=Math.floor(x/GEO.cs),r=Math.floor(y/GEO.cs);
+  if(c<0||c>23||r<0||r>15)return null;
+  return {r:r,c:c,i:r*24+c,x:e.clientX-rc.left,y:e.clientY-rc.top};
+}
+function showTip(e){
+  var h=wellAt(e),tip=$('#tip');
+  if(!h){tip.hidden=true;return;}
+  var w=S.data.wells[S.plate][h.i],txt;
+  if(w.type==='cmp'){var c=S.data.comps[w.ci];txt=wellNameOf(h)+' · '+c.name+' · '+Math.round(w.norm*100)+' % of DMSO';}
+  else txt=wellNameOf(h)+' · '+(w.type==='neg'?'DMSO control':'staurosporine control')+' · '+w.raw+' cells';
+  tip.textContent=txt;tip.hidden=false;
+  var bw=$('#hm').clientWidth;tip.style.top=Math.max(0,h.y-38)+'px';
+  tip.style.left=Math.min(Math.max(0,h.x-tip.offsetWidth/2),bw-tip.offsetWidth)+'px';
+}
+function wellNameOf(h){return wellName(h.r,h.c);}
+$('#heat').addEventListener('pointermove',showTip);
+$('#heat').addEventListener('pointerleave',function(){$('#tip').hidden=true;});
+$('#heat').addEventListener('click',function(e){
+  var h=wellAt(e);if(!h)return;
+  var w=S.data.wells[S.plate][h.i];
+  if(w.type==='cmp'){S.sel=w.ci;renderHits();drawHeat();}
+});
+window.addEventListener('resize',function(){if(!$('#s-res').hidden)drawHeat();});
+
+/* hits */
+function renderHits(){
+  var d=S.data,list=hitsAt(d,S.thr),total=d.comps.length;
+  var lowQ=list.filter(function(c){return S.an.plates[c.plate].z<0.5;}).length;
+  $('#thrl').textContent=Math.round(S.thr*100)+' %';
+  $('#hn').firstChild.nodeValue=String(list.length);
+  $('#hp').firstChild.nodeValue=(list.length/total*100).toFixed(1)+' %';
+  $('#hq').firstChild.nodeValue=String(lowQ);
+  $('#hits').innerHTML=list.slice(0,8).map(function(c){
+    var on=S.short[c.id]?'true':'false';
+    return '<div class="hrow"><button type="button" class="main" data-c="'+c.id+'" aria-pressed="'+(S.sel===c.id)+'"><span class="nm">'+esc(c.name)+'<small>Plate '+(c.plate+1)+' · '+c.well+'</small></span><span class="gauge"><i style="width:'+Math.round(Math.min(1,c.norm)*100)+'%"></i></span><span class="v">'+Math.round(c.norm*100)+' %</span></button><button type="button" class="star" data-s="'+c.id+'" aria-pressed="'+on+'" aria-label="Shortlist '+esc(c.name)+'">'+(on==='true'?'★':'☆')+'</button></div>';
+  }).join('')||'<p class="note">No compounds fall below this cut-off.</p>';
+  var n=Object.keys(S.short).length;$('#copy').textContent='Copy shortlist ('+n+')';
+  renderDetail();
+}
+function renderDetail(){
+  var el=$('#detail');
+  if(S.sel===null){el.innerHTML='<span class="note">Tap a compound to see where it sat on the plate. Tap ☆ to shortlist it.</span>';return;}
+  var c=S.data.comps[S.sel],pz=S.an.plates[c.plate].z,tags='';
+  if(c.edge)tags+='<span class="tag">edge well</span>';
+  if(pz<0.5)tags+='<span class="tag" style="color:var(--warn);border-color:var(--warn)">plate Z′ '+pz.toFixed(2)+'</span>';
+  if(c.norm>=S.thr)tags+='<span class="tag">not a hit at this cut-off</span>';
+  el.innerHTML='<h3>'+esc(c.name)+'</h3><span class="mono">Plate '+(c.plate+1)+' · well '+c.well+' · '+Math.round(c.norm*100)+' % of DMSO</span><div>'+tags+'</div><span class="note">'+(pz<0.5?'This plate has a weak control window. Confirm the result in a dose–response before relying on it.':'Plate controls look healthy, so this call is reasonably safe to follow up.')+'</span>';
+}
+$('#thr').addEventListener('input',function(){S.thr=parseInt(this.value,10)/100;renderHits();});
+$('#hits').addEventListener('click',function(e){
+  var s=e.target.closest('button[data-s]'),m=e.target.closest('button[data-c]');
+  if(s){var id=s.getAttribute('data-s');if(S.short[id])delete S.short[id];else S.short[id]=1;renderHits();return;}
+  if(m){var c=S.data.comps[parseInt(m.getAttribute('data-c'),10)];S.sel=c.id;S.plate=c.plate;renderPlates();drawHeat();renderHits();}
+});
+$('#copy').addEventListener('click',function(){
+  var ids=Object.keys(S.short);if(!ids.length)return;
+  var txt=ids.map(function(i){var c=S.data.comps[i];return c.name+'\tplate '+(c.plate+1)+'\t'+c.well+'\t'+Math.round(c.norm*100)+'% of DMSO';}).join('\n');
+  var ta=$('#ta');
+  function fallback(){ta.hidden=false;ta.value=txt;ta.focus();ta.select();}
+  try{navigator.clipboard.writeText(txt).then(function(){$('#copy').textContent='Copied ✓';setTimeout(renderHits,1400);},fallback);}catch(err){fallback();}
+});
+/* Anonymous visit counting and one tap reaction. Both stay off while COLLECT_URL is empty. */
+var COLLECT_URL='';
+var vid='';
+try{vid=localStorage.getItem('am_vid')||'';}catch(e1){}
+if(!vid){
+  var vb=new Uint8Array(8);
+  if(window.crypto&&window.crypto.getRandomValues){window.crypto.getRandomValues(vb);}else{for(var vi=0;vi<8;vi++)vb[vi]=Math.floor(Math.random()*256);}
+  vid=Array.prototype.map.call(vb,function(x){return ('0'+x.toString(16)).slice(-2);}).join('');
+  try{localStorage.setItem('am_vid',vid);}catch(e2){}
+}
+function track(o){
+  if(!COLLECT_URL)return;
+  o.id=vid;
+  try{fetch(COLLECT_URL,{method:'POST',mode:'no-cors',keepalive:true,headers:{'Content-Type':'text/plain'},body:JSON.stringify(o)}).catch(function(){});}catch(e3){}
+}
+function reacted(){try{return localStorage.getItem('am_done')==='1';}catch(e4){return false;}}
+var popped=false;
+function popupSoon(){
+  if(popped||(COLLECT_URL&&reacted()))return;
+  popped=true;
+  setTimeout(function(){if($('#s-res').hidden)return;openDlg();},1100);
+}
+function openDlg(){
+  var ov=$('#ov');
+  var cf=$('#cf');cf.innerHTML='';
+  var cols=['var(--accent)','var(--brand)','var(--ok)','var(--warn)'];
+  for(var i=0;i<22;i++){var d=document.createElement('i');d.style.left=(Math.random()*100)+'%';d.style.background=cols[i%4];d.style.animationDelay=(Math.random()*0.5)+'s';cf.appendChild(d);}
+  $('#dlg-body').hidden=false;$('#dlg-done').hidden=true;
+  ov.hidden=false;
+  $('#r-new').focus();
+}
+function closeDlg(){$('#ov').hidden=true;}
+function react(choice){
+  track({type:'reaction',choice:choice});
+  try{localStorage.setItem('am_done','1');}catch(e5){}
+  $('#dlg-body').hidden=true;$('#dlg-done').hidden=false;
+  $('#dlg-msg').textContent=choice==='newbie'
+    ?'Welcome to the club. Tap a plate, drag the hit slider, and shortlist a compound or two.'
+    :'Fair enough. Try the messy run and see whether QC agrees with your instincts.';
+  $('#dlg-close').focus();
+}
+$('#r-new').addEventListener('click',function(){react('newbie');});
+$('#r-pro').addEventListener('click',function(){react('pro');});
+$('#dlg-close').addEventListener('click',closeDlg);
+$('#dlg-x').addEventListener('click',closeDlg);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#ov').hidden)closeDlg();});
+if(COLLECT_URL){$('#privacy').hidden=false;track({type:'open'});}
+show('setup');
+})();
+</script>
